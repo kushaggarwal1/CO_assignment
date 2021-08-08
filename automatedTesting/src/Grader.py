@@ -56,5 +56,4 @@ class Grader:
 	def kush(self):
 		print("hello")
 
-	def Shrey(self):
-		print("kuch bhi")
+	
