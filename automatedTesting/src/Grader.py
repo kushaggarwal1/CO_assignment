@@ -53,3 +53,5 @@ class Grader:
 	
 	def grade(self):
 		raise NotImplementedError("Please Implement this method")
+	def kush(self):
+		print("hello")
