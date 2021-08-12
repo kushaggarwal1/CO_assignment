@@ -6,7 +6,7 @@ def decimalToBinary(n):
     x = bin(n).replace("0b", "")
     y = len(x)
     z = (8-y)*"0" + str(x)
-    return z;
+    return z
 
 def typeA(op,reg1,reg2,reg3):
     a=opcode(op)+"00"+register_address(reg1)+register_address(reg2)+register_address(reg3)
@@ -14,23 +14,24 @@ def typeA(op,reg1,reg2,reg3):
 
 def typeB(op, reg1, val):
     a = opcode(op) + register_address(reg1) + decimalToBinary(val)
-    return a;
+    return a
 def typeC(op, reg1, reg2):
     a = opcode(op) + "00000" + register_address(reg1) + register_address(reg2)
-    return a;
+    return a
 
 def typeD(op, reg1, mem):
     a = opcode(op) + register_address(reg1) + "memory"
-    return a;
+    return a
 
 def typeE(op, mem):
     a = opcode(op) + "000" + "memory"
-    return a;
+    return a
 
 def typeF(op):
     a = opcode(op) + "00000000000"
-    return a;
+    return a
 
-def checkError()
+#def checkError():
+    
 
 
