@@ -1,9 +1,5 @@
-import re
-
-
 opcode={"add":"00000","sub":"00001","mov":"00010","ld":"00100","st":"00101","mul":"00110","div":"00111","rs":"01000","ls":"01001","xor":"01010","or":"01011","and":"01100","not":"01101","cmp":"01110","jmp":"01111","jlt":"10000","jgt":"10001","je":"10010","hlt":"10011"}
-register_address={"R0":"000","R1":"001","R2":"010","R3":"011","R4":"100","R5":"101","R6":"110"}
-label_instructions={}
+register_address={"R0":"000","R1":"001","R2":"010","R3":"011","R4":"100","R5":"101","R6":"110", "FLAGS":"111"}
 label_lineno={}
 var_addr={}
 ISA_list = ["add","sub","mov","ld","st","mul","div","rs","ls","xor","or","and","not","cmp","jmp","jlt","jgt","je","hlt","var"]
@@ -15,6 +11,7 @@ typeE_list = ["jmp","jlt","jgt","je"]
 typeF_list = ["hlt"]
 
 instruction_list = []
+res = []
 var_list = []
 binary_out = []
 
@@ -23,8 +20,6 @@ def decimalToBinary(n):
     y = len(x)
     z = (8-y)*"0" + str(x)
     return z
-
-
 
 def checkTypeA(arr):
     if arr[0][len(arr[0])-1] == ":":
@@ -58,7 +53,7 @@ def checkTypeB(arr):
 
     if arr[i+1] not in register_address.keys():
         return False
-    if type(arr[i+2]) != int:
+    if arr[i+2][0] != "$":
         return False
 
     if type(arr[i+2]) == int:
@@ -69,7 +64,7 @@ def checkTypeB(arr):
 
 def checkTypeC(arr):
 
-    if arr[0][len(arr[0])-1] == ":":
+    if arr[0][-1] == ":":
         i = 1
         if len(arr)!=4:
             return False
@@ -140,10 +135,6 @@ def checkError(x):
             if checkTypeA(arr) == False:
                 bool = False
                 break
-        elif arr[i] == "mov":
-            if checkTypeB(arr)==False or checkTypeC == False:
-                bool = False
-                break
         elif arr[i] in typeB_list:
             if checkTypeB(arr) == False:
                 bool = False
@@ -165,12 +156,25 @@ def checkError(x):
             if checkTypeF(arr) == False:
                 bool = False
                 break
+        elif arr[i] == "mov":
+            if arr[i+2][0] == "$":
+                if checkTypeB(arr)==False:
+                    bool = False
+                    break
+            else:
+                if checkTypeC(arr) == False:
+                    bool = False
+                    break
+
+        elif arr[i] not in ISA_list:
+            bool = False
+            break
     return bool
 
 
 def type_1_error(x):
     for i in x:
-        if i[0][len(i[0])-1] == ":":
+        if i[0][-1] == ":":
             k = 1
         else:
             k = 0
@@ -239,49 +243,48 @@ def type_6_error(x):
 def type_7_error(x):
 
     for k in range(len(x)):
-        if x[k][len(x[k])-1] == ":":
+        if x[k][-1] == ":":
             m = 1
         else:
-            m =0
+            m = 0
 
-        if x[k][m+0] == "hlt":
-            break
         if x[k][m+0] == "var":
+            print(x[k])
             print ("Variables not declared at the beginning")
             return False
     return True
 
 def type_8_error(x):
-    # for i in x:
-    #     if i[0][len(i[0])-1] == ":":
-    #         k = 1
-    #     else:
-    #         k = 0
-    #     if i[k+0] == "hlt":
-    #         return True
-    # print ("Missing hlt statement")
+    for i in x:
+        if i[0][len(i[0])-1] == ":":
+            k = 1
+        else:
+            k = 0
+        if i[k+0] == "hlt":
+            return True
+    print ("Missing hlt statement")
     return False
 
 def type_9_error(x):
-     # count = 0
-     # z =0
-     # for i in range(len(x)):
-     #     if x[i][len(x[i]) - 1] == ":":
-     #         m = 1
-     #     else:
-     #         m = 0
-     #     if x[i][m+0] == "hlt":
-     #         count+=1
-     #     if count == 2:
-     #         print ("Multiple hlt statements")
-     #         return False
-     #
-     # if x[len(x)-1][0][-1] == ":":
-     #     z = 1
-     #
-     # if x[len(x)-1][z+0] != "hlt":
-     #    print ("hlt not being used as the last instruction")
-     #    return False
+     count = 0
+     z =0
+     for i in range(len(x)):
+         if x[i][len(x[i]) - 1] == ":":
+             m = 1
+         else:
+             m = 0
+         if x[i][m+0] == "hlt":
+             count+=1
+         if count == 2:
+             print ("Multiple hlt statements")
+             return False
+
+     if x[len(x)-1][0][-1] == ":":
+         z = 1
+
+     if x[len(x)-1][z+0] != "hlt":
+        print ("hlt not being used as the last instruction")
+        return False
 
      return True
 
@@ -312,7 +315,10 @@ def typeB(op, reg1, val):
     a = opcode[op] + register_address[reg1] + decimalToBinary(int(val[1:]))
     return a
 def typeC(op, reg1, reg2):
-    a = opcode[op] + "00000" + register_address[reg1] + register_address[reg2]
+    if op == "mov":
+        a = "00011" + "00000" + register_address[reg1] + register_address[reg2]
+    else:
+        a = opcode[op] + "00000" + register_address[reg1] + register_address[reg2]
     return a
 
 def typeD(op, reg1, mem):
@@ -329,52 +335,52 @@ def typeF(op):
 
 
 def main():
+    global instruction_list
 
     while True:
-        if len(instruction_list)==4:
-            break
+
         try:
-            line = raw_input()
+            line = input()
             if line != "":
                 instruction_list.append(line)
 
         except EOFError:
             break
 
-    for i in range(len(instruction_list)):
-        instruction_list[i]=extraSpaceRemoval(instruction_list[i])
-
-    """
-    for i in instruction_list:              #????
-        if(i==""):
-            instruction_list.remove(i)
-            """
-
-    
-    for i in instruction_list:      #for adjusting the variables in the instruction list to the bottom of the instruction set
-        arr = i.split(" ")
-        if arr[0] == 'var':
-            
-            instruction_list.append(instruction_list.pop())
-        else:
-            break
-
-    for i in range(len(instruction_list)):      #for storing the address of the variables
-        arr = instruction_list[i].split(" ")
-        if arr[0] == 'var':
-            var_addr[arr[1]]=i      ##delete var from end of list!!!!!!!!!!!
-
-    for i in instruction_list:
-        arr=i.split(" ")
-        if(arr[0]=="var"):
-            instruction_list.remove(i)
 
     for i in range(len(instruction_list)):
-        arr = instruction_list[i].split(" ")
+        arr = instruction_list[i].split()
         instruction_list[i] = arr
 
-    # if all_errors(instruction_list) == False:
-    #     exit()
+    for i in range(len(instruction_list)):
+        if instruction_list[i][0][-1] == ":":
+             label_kushagg = 1
+        else:
+             label_kushagg = 0
+        if instruction_list[i][label_kushagg+0] == "var":
+            var_addr[instruction_list[i][label_kushagg+1]] = i
+            var_list.append(instruction_list[i][label_kushagg+1])
+        else:
+            break
+    if type_9_error(instruction_list) == False:
+        exit()
+
+    for i in instruction_list:
+
+        if i[0] != "var":
+            res.append(i)
+
+    instruction_list = res
+
+    for i in var_addr:
+        var_addr[i] += len(instruction_list)
+
+    for i in range(len(instruction_list)):
+        if instruction_list[i][0][-1] == ":":
+            label_lineno[instruction_list[i][0][0:-1]] = i
+
+    if all_errors(instruction_list) == False:
+        exit()
 
     for i in instruction_list:
         if i[0][-1] == ":":
@@ -398,12 +404,8 @@ def main():
                 binary_out.append(typeB(i[label_flag+0],i[label_flag+1],i[label_flag+2]))
             else:
                 binary_out.append(typeC(i[label_flag + 0], i[label_flag + 1], i[label_flag + 2]))
-    print(binary_out)
-    
-def extraSpaceRemoval(a):       #s-->string      
-    return re.sub(' +',' ', a)  #this removes the excess white spaces in the string
-
-
+    for i in binary_out:
+        print(i)
 
 
 if __name__== "__main__":
