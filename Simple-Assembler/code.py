@@ -2,12 +2,14 @@ import re
 
 
 opcode={"add":"00000","sub":"00001","mov":"00010","ld":"00100","st":"00101","mul":"00110","div":"00111","rs":"01000","ls":"01001","xor":"01010","or":"01011","and":"01100","not":"01101","cmp":"01110","jmp":"01111","jlt":"10000","jgt":"10001","je":"10010","hlt":"10011"}
-register_address={"r0":"000","r1":"001","r2":"010","r3":"011","r4":"100","r5":"101","r6":"110","flag":"111"}
+register_address={"r0":"000","r1":"001","r2":"010","r3":"011","r4":"100","r5":"101","r6":"110"}
 label_instructions={}
 label_lineno={}
 var_addr={}
-
-
+ISA_list = ["add","sub","mov","ld","st","mul","div","rs","ls","xor","or","and","not","cmp","jmp","jlt","jgt","je","hlt","var"]
+instruction_list = []
+var_list = []
+binary_out = []
 
 def decimalToBinary(n):
     x = bin(n).replace("0b", "")
@@ -15,28 +17,7 @@ def decimalToBinary(n):
     z = (8-y)*"0" + str(x)
     return z
 
-def typeA(op,reg1,reg2,reg3):
-    a=opcode(op)+"00"+register_address(reg1)+register_address(reg2)+register_address(reg3)
-    return a
 
-def typeB(op, reg1, val):
-    a = opcode(op) + register_address(reg1) + decimalToBinary(val)
-    return a
-def typeC(op, reg1, reg2):
-    a = opcode(op) + "00000" + register_address(reg1) + register_address(reg2)
-    return a
-
-def typeD(op, reg1, mem):
-    a = opcode(op) + register_address(reg1) + "memory"
-    return a
-
-def typeE(op, mem):
-    a = opcode(op) + "000" + "memory"
-    return a
-
-def typeF(op):
-    a = opcode(op) + "00000000000"
-    return a
 
 def checkTypeA(arr):
     if len(arr)!=4:
@@ -75,17 +56,24 @@ def checkTypeC(arr):
     return True
 
 def checkTypeD(arr):
-
-    return
+    if len(arr)!=3:
+        return False
+    if arr[1] not in register_address.keys():
+        return False
+    if arr[2] not in var_addr.keys():
+        return False
+    return True
 
 def checkTypeE(arr):
-
-    return
+    if arr[1] not in label_lineno.keys():
+        return False
+    return True
 
 def checkTypeF(arr):
     if len(arr) != 1:
         return False
     return True
+
 
 
 def checkError(arr):
@@ -131,14 +119,127 @@ def checkError(arr):
         return False
 
 
+
+def type_1_error(x):
+    for i in x:
+        if i[0] not in ISA_list:
+            print "Invalid Syntax"
+            return False
+    return True
+
+def type_2_error(x):
+    for i in x:
+        if i[0] == "ld" or i[0] == "st":
+            if i[2] not in var_list:
+                print "Use of undefined variable"
+                return False
+    return True
+
+def type_3_error(x):
+    for i in x:
+        if i[0] in ["jmp","jlt","jgt","je"]:
+            if i[1] not in label_lineno.keys():
+                print "Use of undefined label"
+                return False
+    return True
+
+def type_4_error(x):
+    for i in x:
+        if "FLAG" in i:
+            if i[0]!= "mov":
+                print "Illegal use of FLAGS register"
+                return False
+    return True
+
+def type_5_error(x):
+    for i in x:
+        if i[0] in ["mov", "rs", "ls"]:
+            if i[2][0] == "$":
+                if int(i[2][1:]) > 255 or int(i[2][1:]) <0:
+                    print "Invalid immediate value"
+                    return False
+    return True
+
+def type_6_error(x):
+    for i in label_lineno.keys():
+        if i in var_list:
+            return False
+    return True
+
+def type_7_error(x):
+
+    for k in range(len(x)):
+        if x[k][0] == "hlt":
+            break
+        if x[k][0] == "var":
+            print "Variables not declared at the beginning"
+            return False
+    return True
+
+def type_8_error(x):
+    for i in x:
+        if i[0] == "hlt":
+            return True
+    print "Missing hlt statement"
+    return False
+
+def type_9_error(x):
+     count = 0
+     for i in range(len(x)):
+         if x[i][0] == "hlt":
+             count+=1
+         if count == 2:
+             print "Multiple hlt statements"
+             return False
+     if x[len(x)-1][0] != "hlt":
+        print "hlt not being used as the last instruction"
+        return False
+
+     return True
+
+
+
+def type_10_error(x):
+    if checkError(x):
+        return True
+    else:
+        return False
+
+
+
+
+
+def typeA(op,reg1,reg2,reg3):
+    a=opcode(op)+"00"+register_address(reg1)+register_address(reg2)+register_address(reg3)
+    return a
+
+def typeB(op, reg1, val):
+    a = opcode(op) + register_address(reg1) + decimalToBinary(val)
+    return a
+def typeC(op, reg1, reg2):
+    a = opcode(op) + "00000" + register_address(reg1) + register_address(reg2)
+    return a
+
+def typeD(op, reg1, mem):
+    a = opcode(op) + register_address(reg1) + "memory"
+    return a
+
+def typeE(op, mem):
+    a = opcode(op) + "000" + "memory"
+    return a
+
+def typeF(op):
+    a = opcode(op) + "00000000000"
+    return a
+
+
 def main():
-    instruction_list = []
-    var_list = []
-    binary_out = []
+
     while True:
         try:
             line = input()
-            instruction_list.append(line)
+            if line != "":
+                instruction_list.append(line)
 
         except EOFError:
             break
@@ -153,11 +254,10 @@ def main():
     for i in range(len(instruction_list)):      #for storing the address of the variables
         arr = instruction_list[i].split(" ")
         if arr[0] == 'var':
-            var_addr(arr[1])=i
+            var_addr[arr[1]]=i      ##delete var from end of list!!!!!!!!!!!
     
 def extraSpaceRemoval(a):       #s-->string      
     return re.sub(' +',' ', a)  #this removes the excess white spaces in the string
-        
 
 
 
