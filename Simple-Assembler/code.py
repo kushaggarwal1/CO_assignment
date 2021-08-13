@@ -123,7 +123,7 @@ def checkError(arr):
 def type_1_error(x):
     for i in x:
         if i[0] not in ISA_list:
-            print "Invalid Syntax"
+            print ("Invalid Syntax")
             return False
     return True
 
@@ -131,7 +131,7 @@ def type_2_error(x):
     for i in x:
         if i[0] == "ld" or i[0] == "st":
             if i[2] not in var_list:
-                print "Use of undefined variable"
+                print ("Use of undefined variable")
                 return False
     return True
 
@@ -139,7 +139,7 @@ def type_3_error(x):
     for i in x:
         if i[0] in ["jmp","jlt","jgt","je"]:
             if i[1] not in label_lineno.keys():
-                print "Use of undefined label"
+                print ("Use of undefined label")
                 return False
     return True
 
@@ -147,7 +147,7 @@ def type_4_error(x):
     for i in x:
         if "FLAG" in i:
             if i[0]!= "mov":
-                print "Illegal use of FLAGS register"
+                print ("Illegal use of FLAGS register")
                 return False
     return True
 
@@ -156,7 +156,7 @@ def type_5_error(x):
         if i[0] in ["mov", "rs", "ls"]:
             if i[2][0] == "$":
                 if int(i[2][1:]) > 255 or int(i[2][1:]) <0:
-                    print "Invalid immediate value"
+                    print ("Invalid immediate value")
                     return False
     return True
 
@@ -172,7 +172,7 @@ def type_7_error(x):
         if x[k][0] == "hlt":
             break
         if x[k][0] == "var":
-            print "Variables not declared at the beginning"
+            print ("Variables not declared at the beginning")
             return False
     return True
 
@@ -180,7 +180,7 @@ def type_8_error(x):
     for i in x:
         if i[0] == "hlt":
             return True
-    print "Missing hlt statement"
+    print ("Missing hlt statement")
     return False
 
 def type_9_error(x):
@@ -189,10 +189,10 @@ def type_9_error(x):
          if x[i][0] == "hlt":
              count+=1
          if count == 2:
-             print "Multiple hlt statements"
+             print ("Multiple hlt statements")
              return False
      if x[len(x)-1][0] != "hlt":
-        print "hlt not being used as the last instruction"
+        print ("hlt not being used as the last instruction")
         return False
 
      return True
@@ -255,6 +255,14 @@ def main():
         arr = instruction_list[i].split(" ")
         if arr[0] == 'var':
             var_addr[arr[1]]=i      ##delete var from end of list!!!!!!!!!!!
+
+
+
+    for i in instruction_list:
+        arr=i.split(" ")
+        if(arr[0]=="var"):
+            instruction_list.remove(i)
+
     
 def extraSpaceRemoval(a):       #s-->string      
     return re.sub(' +',' ', a)  #this removes the excess white spaces in the string
