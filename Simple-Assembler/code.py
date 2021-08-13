@@ -1,5 +1,10 @@
 opcode={"add":"00000","sub":"00001","mov":"00010","ld":"00100","st":"00101","mul":"00110","div":"00111","rs":"01000","ls":"01001","xor":"01010","or":"01011","and":"01100","not":"01101","cmp":"01110","jmp":"01111","jlt":"10000","jgt":"10001","je":"10010","hlt":"10011"}
 register_address={"r0":"000","r1":"001","r2":"010","r3":"011","r4":"100","r5":"101","r6":"110","flag":"111"}
+label_instructions={}
+label_lineno={}
+var_addr={}
+
+
 
 def decimalToBinary(n):
     x = bin(n).replace("0b", "")
@@ -134,11 +139,19 @@ def main():
 
         except EOFError:
             break
-    for i in instruction_list:
+    for i in instruction_list:      #for adjusting the variables in the instruction list to the bottom of the instruction set
         arr = i.split(" ")
         if arr[0] == 'var':
+            var_list.append(arr[1])
             instruction_list.append(instruction_list.pop())
+        else:
+            break
 
+    for i in range(len(instruction_list)):      #for storing the address of the variables
+        arr = instruction_list[i].split(" ")
+        if arr[0] == 'var':
+            var_addr(arr[1])=i
+    
 
 
 
