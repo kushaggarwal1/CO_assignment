@@ -243,6 +243,17 @@ def main():
 
         except EOFError:
             break
+
+    for i in range(len(instruction_list)):
+        instruction_list[i]=extraSpaceRemoval(instruction_list[i])
+        
+    """
+    for i in instruction_list:              #????
+        if(i==""):
+            instruction_list.remove(i)
+            """
+    
+    
     for i in instruction_list:      #for adjusting the variables in the instruction list to the bottom of the instruction set
         arr = i.split(" ")
         if arr[0] == 'var':
