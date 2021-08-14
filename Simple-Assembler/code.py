@@ -214,8 +214,8 @@ def type_4_error(x):
             k = 1
         else:
             k = 0
-        if "FLAG" in i:
-            if i[k+0]!= "mov":
+        if "FLAGS" in i:
+            if i[k+0] != "mov":
                 print ("Illegal use of FLAGS register")
                 return False
     return True
@@ -236,6 +236,7 @@ def type_5_error(x):
 def type_6_error(x):
     for i in label_lineno.keys():
         if i in var_list:
+            print("Misuse of labels as variables")
             return False
     return True
 
@@ -297,8 +298,10 @@ def type_10_error(x):
 
 
 def all_errors(x):
-    # if len(x) == 1 and x[0][-1] == ":":
-    #     return True
+    for i in x:
+        if len(i) == 1 and i[0][-1] == ":":
+            print ("Invalid Syntax")
+            return False
 
     if type_1_error(x) and type_2_error(x) and type_3_error(x) and type_4_error(x) and type_5_error(x) and type_6_error(x) and type_7_error(x) and type_8_error(x) and type_9_error(x) and type_10_error(x):
         return True
@@ -337,13 +340,12 @@ def typeF(op):
 
 
 def main():
-    # global instruction_list
+
 
     while True:
-        if len(instruction_list) == 5:
-            break
+
         try:
-            line = raw_input()
+            line = input()
             if line != "":
                 instruction_list.append(line)
 
@@ -356,13 +358,10 @@ def main():
         instruction_list[i] = arr
 
     for i in range(len(instruction_list)):
-        if instruction_list[i][0][-1] == ":":
-             label_kushagg = 1
-        else:
-             label_kushagg = 0
-        if instruction_list[i][label_kushagg+0] == "var":
-            var_addr[instruction_list[i][label_kushagg+1]] = i
-            var_list.append(instruction_list[i][label_kushagg+1])
+
+        if instruction_list[i][0] == "var":
+            var_addr[instruction_list[i][1]] = i
+            var_list.append(instruction_list[i][1])
         else:
             break
 
