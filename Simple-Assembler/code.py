@@ -11,7 +11,6 @@ typeE_list = ["jmp","jlt","jgt","je"]
 typeF_list = ["hlt"]
 
 instruction_list = []
-res = []
 var_list = []
 binary_out = []
 
@@ -249,7 +248,6 @@ def type_7_error(x):
             m = 0
 
         if x[k][m+0] == "var":
-            print(x[k])
             print ("Variables not declared at the beginning")
             return False
     return True
@@ -299,8 +297,12 @@ def type_10_error(x):
 
 
 def all_errors(x):
+    # if len(x) == 1 and x[0][-1] == ":":
+    #     return True
+
     if type_1_error(x) and type_2_error(x) and type_3_error(x) and type_4_error(x) and type_5_error(x) and type_6_error(x) and type_7_error(x) and type_8_error(x) and type_9_error(x) and type_10_error(x):
         return True
+
     else:
         return False
 
@@ -335,12 +337,13 @@ def typeF(op):
 
 
 def main():
-    global instruction_list
+    # global instruction_list
 
     while True:
-
+        if len(instruction_list) == 5:
+            break
         try:
-            line = input()
+            line = raw_input()
             if line != "":
                 instruction_list.append(line)
 
@@ -362,15 +365,13 @@ def main():
             var_list.append(instruction_list[i][label_kushagg+1])
         else:
             break
-    if type_9_error(instruction_list) == False:
-        exit()
 
-    for i in instruction_list:
-
-        if i[0] != "var":
-            res.append(i)
-
-    instruction_list = res
+    boolean = True
+    while boolean == True:
+        if instruction_list[0][0] == "var":
+            instruction_list.pop(0)
+        else:
+            boolean = False
 
     for i in var_addr:
         var_addr[i] += len(instruction_list)
