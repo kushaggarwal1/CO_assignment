@@ -1,5 +1,6 @@
 opcode={"add":"00000","sub":"00001","mov":"00010","ld":"00100","st":"00101","mul":"00110","div":"00111","rs":"01000","ls":"01001","xor":"01010","or":"01011","and":"01100","not":"01101","cmp":"01110","jmp":"01111","jlt":"10000","jgt":"10001","je":"10010","hlt":"10011"}
 register_address={"R0":"000","R1":"001","R2":"010","R3":"011","R4":"100","R5":"101","R6":"110", "FLAGS":"111"}
+register_list=["R0","R1","R2","R3","R4","R5","R6"]
 label_lineno={}
 var_addr={}
 ISA_list = ["add","sub","mov","ld","st","mul","div","rs","ls","xor","or","and","not","cmp","jmp","jlt","jgt","je","hlt","var"]
@@ -30,11 +31,11 @@ def checkTypeA(arr):
         if len(arr)!=4:
             return False
 
-    if arr[i+1] not in register_address.keys():
+    if arr[i+1] not in register_list:
         return False
-    if arr[i+2] not in register_address.keys():
+    if arr[i+2] not in register_list:
         return False
-    if arr[i+3] not in register_address.keys():
+    if arr[i+3] not in register_list:
         return False
     return True
 
@@ -50,7 +51,7 @@ def checkTypeB(arr):
         if len(arr)!=3:
             return False
 
-    if arr[i+1] not in register_address.keys():
+    if arr[i+1] not in register_list:
         return False
     if arr[i+2][0] != "$":
         return False
@@ -62,7 +63,6 @@ def checkTypeB(arr):
     return True
 
 def checkTypeC(arr):
-
     if arr[0][-1] == ":":
         i = 1
         if len(arr)!=4:
@@ -70,6 +70,12 @@ def checkTypeC(arr):
     else:
         i = 0
         if len(arr)!=3:
+            return False
+    if arr[i+0] == "mov":
+        if arr[i+1] not in register_list:
+            return False
+
+        if arr[i+2] not in register_address.keys():
             return False
 
     if arr[i+1] not in register_address.keys():
@@ -124,58 +130,57 @@ def checkTypeF(arr):
 
 def checkError(x):
     bool = True
-    counter = 0
     for arr in x:
-        counter +=1
+
         if arr[0][len(arr[0])-1] == ":":
             i = 1
         else:
             i = 0
         if arr[i] in typeA_list:
             if checkTypeA(arr) == False:
-                print (counter)
+                print (x.index(arr))
                 bool = False
                 break
         elif arr[i] in typeB_list:
             if checkTypeB(arr) == False:
-                print (counter)
+                print (x.index(arr))
                 bool = False
                 break
         elif arr[i] in typeC_list:
             if checkTypeC(arr) == False:
-                print (counter)
+                print (x.index(arr))
                 bool = False
                 break
 
         elif arr[i] in typeD_list:
             if checkTypeD(arr) == False:
-                print (counter)
+                print (x.index(arr))
                 bool = False
                 break
         elif arr[i] in typeE_list:
             if checkTypeE(arr) == False:
-                print (counter)
+                print (x.index(arr))
                 bool = False
                 break
         elif arr[i] in typeF_list:
             if checkTypeF(arr) == False:
-                print (counter)
+                print (x.index(arr))
                 bool = False
                 break
         elif arr[i] == "mov":
             if arr[i+2][0] == "$":
                 if checkTypeB(arr)==False:
-                    print (counter)
+                    print (x.index(arr))
                     bool = False
                     break
             else:
                 if checkTypeC(arr) == False:
-                    print (counter)
+                    print (x.index(arr))
                     bool = False
                     break
 
         elif arr[i] not in ISA_list:
-            print (counter)
+            print (x.index(arr))
             bool = False
             break
     return bool
@@ -191,7 +196,7 @@ def type_1_error(x):
             k = 0
 
         if i[k+0] not in ISA_list:
-            print (counter)
+            print (x.index(i))
             print ("Invalid Syntax")
             return False
     return True
@@ -206,7 +211,7 @@ def type_2_error(x):
             k = 0
         if i[k+0] == "ld" or i[k+0] == "st":
             if i[k+2] not in var_list:
-                print (counter)
+                print (x.index(i))
                 print ("Use of undefined variable")
                 return False
     return True
@@ -222,7 +227,7 @@ def type_3_error(x):
 
         if i[k+0] in ["jmp","jlt","jgt","je"]:
             if i[k+1] not in label_lineno.keys():
-                print (counter)
+                print (x.index(i))
                 print ("Use of undefined label")
                 return False
     return True
@@ -230,16 +235,18 @@ def type_3_error(x):
 def type_4_error(x):
     counter = 0
     for i in x:
-        counter +=1
+
         if i[0][len(i[0])-1] == ":":
             k = 1
         else:
             k = 0
-        if "FLAGS" in i:
-            if i[k+0] != "mov":
-                print (counter)
-                print ("Illegal use of FLAGS register")
-                return False
+        if len(i) == k+3:
+            if i[k+2] == "FLAGS":
+                if i[k+0] != "mov":
+                    print (x.index(i))
+                    print ("Illegal use of FLAGS register")
+                    return False
+        counter += 1
     return True
 
 def type_5_error(x):
@@ -253,19 +260,23 @@ def type_5_error(x):
         if i[k+0] in ["mov", "rs", "ls"]:
             if i[k+2][0] == "$":
                 if int(i[k+2][1:]) > 255 or int(i[2][1:]) <0:
-                    print (counter)
+                    print (x.index(i))
                     print ("Invalid immediate value")
                     return False
     return True
 
 def type_6_error(x):
-    counter = 0
-    for i in label_lineno.keys():
-        counter +=1
-        if i in var_list:
-            print (counter)
-            print("Misuse of labels as variables")
-            return False
+
+    for i in x:
+        if i[0][-1] == ":":
+            k = 1
+        else:
+            k = 0
+        if i[k] in typeE_list:
+            if i[k+1] in var_list:
+                print (x.index(i))
+                print ("Misuse of labels as variables")
+                return False
     return True
 
 def type_7_error(x):
@@ -278,22 +289,21 @@ def type_7_error(x):
             m = 0
 
         if x[k][m+0] == "var":
-            print (counter)
+            print (x.index(x[k]))
             print ("Variables not declared at the beginning")
             return False
     return True
 
 def type_8_error(x):
-    counter = 0
+
     for i in x:
-        counter +=1
+
         if i[0][len(i[0])-1] == ":":
             k = 1
         else:
             k = 0
         if i[k+0] == "hlt":
             return True
-    print (counter)
     print ("Missing hlt statement")
     return False
 
@@ -310,7 +320,7 @@ def type_9_error(x):
          if x[i][m+0] == "hlt":
              count+=1
          if count == 2:
-             print (counter)
+             print (x.index(x[i]))
              print ("Multiple hlt statements")
              return False
 
@@ -318,7 +328,6 @@ def type_9_error(x):
          z = 1
 
      if x[len(x)-1][z+0] != "hlt":
-        print (counter)
         print ("hlt not being used as the last instruction")
         return False
 
@@ -339,7 +348,7 @@ def all_errors(x):
     for i in x:
         counter +=1
         if len(i) == 1 and i[0][-1] == ":":
-            print (counter)
+            print (x.index(i))
             print ("Invalid Syntax")
             return False
 
